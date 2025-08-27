@@ -498,7 +498,6 @@ st.set_page_config(
     page_icon="🛠️",
     initial_sidebar_state="collapsed"
 )
-
 # ==========================
 # Notification Functions
 # ==========================
@@ -937,7 +936,6 @@ with tab2:
         show_notification(f"Lỗi khi tải dữ liệu người dùng: {e}", "error")
     st.markdown('</div>', unsafe_allow_html=True)
 
-
 # ================== TAB 3: LOG & EXPORT ==================
 with tab3:
     st.markdown('<div class="admin-card">', unsafe_allow_html=True)
@@ -985,103 +983,388 @@ with tab3:
                 height=400
             )
 
-            # Export Section
+            # Export Section - DROPDOWN VERSION
             st.markdown("""
             <div class="export-section">
                 <div class="export-title">📤 Xuất dữ liệu báo cáo</div>
-                <p style="color: #64748b; margin-bottom: 1.5rem;">Chọn định dạng để tải xuống dữ liệu logs</p>
+                <p style="color: #64748b; margin-bottom: 1.5rem;">Chọn định dạng để tải xuống dữ liệu với hỗ trợ đầy đủ tiếng Việt</p>
             </div>
             """, unsafe_allow_html=True)
             
-            col1, col2, col3, col4 = st.columns(4)
+            # Dropdown để chọn định dạng xuất
+            export_format = st.selectbox(
+                "🎯 Chọn định dạng xuất file:",
+                options=["CSV - Excel tự nhận diện tiếng Việt", 
+                         "Excel - Định dạng đẹp với thống kê", 
+                         "JSON - Giữ nguyên ký tự tiếng Việt", 
+                         "PDF - Layout chuyên nghiệp"],
+                help="Chọn định dạng phù hợp cho nhu cầu sử dụng của bạn"
+            )
 
-            # CSV Export
-            with col1:
-                csv = df_logs.to_csv(index=False).encode("utf-8")
-                st.download_button(
-                    "📊 Xuất CSV",
-                    csv,
-                    f"activity_logs_{pd.Timestamp.now().strftime('%Y%m%d_%H%M')}.csv",
-                    "text/csv",
-                    help="Định dạng CSV cho Excel, Google Sheets"
-                )
-
-            # Excel Export
-            with col2:
-                output = BytesIO()
-                with pd.ExcelWriter(output, engine="openpyxl") as writer:
-                    df_logs.to_excel(writer, index=False, sheet_name="Activity_Logs")
-                
-                st.download_button(
-                    "📈 Xuất Excel",
-                    output.getvalue(),
-                    f"activity_logs_{pd.Timestamp.now().strftime('%Y%m%d_%H%M')}.xlsx",
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    help="Định dạng Excel với nhiều sheet"
-                )
-
-            # JSON Export
-            with col3:
-                json_data = df_logs.to_json(orient='records', indent=2).encode('utf-8')
-                st.download_button(
-                    "📋 Xuất JSON",
-                    json_data,
-                    f"activity_logs_{pd.Timestamp.now().strftime('%Y%m%d_%H%M')}.json",
-                    "application/json",
-                    help="Định dạng JSON cho API, databases"
-                )
-
-            # PDF Export
-            with col4:
+            # Nút xuất duy nhất
+            if st.button("⬇️ Tải xuống", type="primary", use_container_width=True):
                 try:
-                    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-                    from reportlab.lib import colors
-                    from reportlab.lib.pagesizes import A4, landscape
-                    from reportlab.lib.styles import getSampleStyleSheet
-                    
-                    pdf_output = BytesIO()
-                    doc = SimpleDocTemplate(pdf_output, pagesize=landscape(A4))
-                    styles = getSampleStyleSheet()
-                    
-                    # Title
-                    title = Paragraph("📋 Activity Logs Report", styles['Title'])
-                    subtitle = Paragraph(f"Generated: {pd.Timestamp.now().strftime('%d/%m/%Y %H:%M')}", styles['Normal'])
-                    
-                    # Table data (limit columns to fit)
-                    display_cols = ['id', 'action', 'user_id', 'formatted_date']
-                    available_cols = [col for col in display_cols if col in df_logs.columns]
-                    
-                    table_data = [available_cols] + df_logs[available_cols].head(50).values.tolist()
-                    
-                    table = Table(table_data)
-                    table.setStyle(TableStyle([
-                        ("BACKGROUND", (0,0), (-1,0), colors.navy),
-                        ("TEXTCOLOR", (0,0), (-1,0), colors.whitesmoke),
-                        ("ALIGN", (0,0), (-1,-1), "CENTER"),
-                        ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
-                        ("FONTSIZE", (0,0), (-1,0), 10),
-                        ("BOTTOMPADDING", (0,0), (-1,0), 12),
-                        ("BACKGROUND", (0,1), (-1,-1), colors.beige),
-                        ("GRID", (0,0), (-1,-1), 1, colors.black),
-                        ("FONTSIZE", (0,1), (-1,-1), 8),
-                        ("ROWBACKGROUNDS", (0,1), (-1,-1), [colors.white, colors.lightgrey])
-                    ]))
-                    
-                    # Build PDF
-                    story = [title, Spacer(1, 12), subtitle, Spacer(1, 20), table]
-                    doc.build(story)
-                    
-                    st.download_button(
-                        "📄 Xuất PDF",
-                        pdf_output.getvalue(),
-                        f"activity_logs_{pd.Timestamp.now().strftime('%Y%m%d_%H%M')}.pdf",
-                        "application/pdf",
-                        help="Định dạng PDF cho báo cáo in ấn"
-                    )
-                except ImportError:
-                    show_notification("Chưa cài đặt ReportLab - Chạy: pip install reportlab để kích hoạt xuất PDF", "warning")
+                    if "CSV" in export_format:
+                        # CSV Export
+                        import io
+                        csv_buffer = io.StringIO()
+                        df_logs.to_csv(csv_buffer, index=False, encoding='utf-8')
+                        csv_content = csv_buffer.getvalue()
+                        csv_with_bom = '\ufeff' + csv_content
+                        csv_bytes = csv_with_bom.encode('utf-8')
+                        
+                        st.download_button(
+                            "📊 Tải file CSV",
+                            csv_bytes,
+                            f"activity_logs_{pd.Timestamp.now().strftime('%Y%m%d_%H%M')}.csv",
+                            "text/csv",
+                            help="CSV với UTF-8 BOM - Excel sẽ tự nhận diện tiếng Việt",
+                            use_container_width=True
+                        )
+                        show_notification("File CSV đã sẵn sàng tải xuống!", "success", auto_close=True)
+
+                    elif "Excel" in export_format:
+                        # Excel Export
+                        from io import BytesIO
+                        output = BytesIO()
+                        
+                        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+                            # Xuất dữ liệu chính
+                            df_logs.to_excel(writer, index=False, sheet_name="Activity_Logs")
+                            
+                            # Tạo sheet thống kê
+                            summary_data = {
+                                'Thống kê': [
+                                    'Tổng số logs',
+                                    'Số loại hoạt động',
+                                    'Số người dùng',
+                                    'Thời gian đầu tiên',
+                                    'Thời gian cuối cùng'
+                                ],
+                                'Giá trị': [
+                                    len(df_logs),
+                                    df_logs['action'].nunique() if 'action' in df_logs.columns else 0,
+                                    df_logs['user_id'].nunique() if 'user_id' in df_logs.columns else 0,
+                                    df_logs['formatted_date'].min() if 'formatted_date' in df_logs.columns else 'N/A',
+                                    df_logs['formatted_date'].max() if 'formatted_date' in df_logs.columns else 'N/A'
+                                ]
+                            }
+                            summary_df = pd.DataFrame(summary_data)
+                            summary_df.to_excel(writer, sheet_name="Thống_kê", index=False)
+                            
+                            # Format Excel
+                            try:
+                                from openpyxl.styles import Font, PatternFill, Alignment
+                                workbook = writer.book
+                                
+                                # Format main sheet
+                                worksheet = writer.sheets["Activity_Logs"]
+                                for cell in worksheet[1]:  # Header row
+                                    cell.font = Font(bold=True, color="FFFFFF")
+                                    cell.fill = PatternFill(start_color="1E40AF", end_color="1E40AF", fill_type="solid")
+                                    cell.alignment = Alignment(horizontal="center")
+                                
+                                # Auto-adjust column width
+                                for column in worksheet.columns:
+                                    max_length = 0
+                                    column_letter = column[0].column_letter
+                                    for cell in column:
+                                        try:
+                                            if len(str(cell.value)) > max_length:
+                                                max_length = len(str(cell.value))
+                                        except:
+                                            pass
+                                    adjusted_width = min(max(max_length + 2, 10), 50)
+                                    worksheet.column_dimensions[column_letter].width = adjusted_width
+                                
+                                # Format summary sheet
+                                summary_ws = writer.sheets["Thống_kê"]
+                                for cell in summary_ws[1]:
+                                    cell.font = Font(bold=True)
+                                    cell.fill = PatternFill(start_color="E3F2FD", end_color="E3F2FD", fill_type="solid")
+                                summary_ws.column_dimensions['A'].width = 25
+                                summary_ws.column_dimensions['B'].width = 20
+                            except ImportError:
+                                pass
+                        
+                        st.download_button(
+                            "📈 Tải file Excel",
+                            output.getvalue(),
+                            f"activity_logs_{pd.Timestamp.now().strftime('%Y%m%d_%H%M')}.xlsx",
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            help="Excel với định dạng đẹp và sheet thống kê",
+                            use_container_width=True
+                        )
+                        show_notification("File Excel đã sẵn sàng tải xuống!", "success", auto_close=True)
+
+                    elif "JSON" in export_format:
+                        # JSON Export
+                        import json
+                        
+                        df_json = df_logs.copy()
+                        
+                        # Chuyển đổi datetime/timestamp columns thành string
+                        for col in df_json.columns:
+                            if df_json[col].dtype == 'datetime64[ns]' or 'datetime' in str(df_json[col].dtype):
+                                df_json[col] = df_json[col].dt.strftime('%Y-%m-%d %H:%M:%S')
+                            elif any(isinstance(val, pd.Timestamp) for val in df_json[col].dropna()):
+                                df_json[col] = df_json[col].apply(lambda x: x.strftime('%Y-%m-%d %H:%M:%S') if pd.notna(x) and hasattr(x, 'strftime') else str(x))
+                        
+                        json_dict = df_json.to_dict(orient='records')
+                        json_string = json.dumps(json_dict, indent=2, ensure_ascii=False)
+                        json_data = json_string.encode('utf-8')
+                        
+                        st.download_button(
+                            "📋 Tải file JSON",
+                            json_data,
+                            f"activity_logs_{pd.Timestamp.now().strftime('%Y%m%d_%H%M')}.json",
+                            "application/json",
+                            help="JSON với UTF-8 encoding, giữ nguyên tiếng Việt",
+                            use_container_width=True
+                        )
+                        show_notification("File JSON đã sẵn sàng tải xuống!", "success", auto_close=True)
+
+                    elif "PDF" in export_format:
+                        # PDF Export
+                        try:
+                            from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+                            from reportlab.lib import colors
+                            from reportlab.lib.pagesizes import A4, landscape
+                            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+                            from reportlab.pdfbase import pdfmetrics
+                            from reportlab.pdfbase.ttfonts import TTFont
+                            from reportlab.lib.units import inch
+                            import os
+                            
+                            # Thử đăng ký font tiếng Việt
+                            font_paths = [
+                                '/System/Library/Fonts/Arial.ttf',  # macOS
+                                'C:\\Windows\\Fonts\\arial.ttf',    # Windows  
+                                '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',  # Linux
+                                '/usr/share/fonts/TTF/DejaVuSans.ttf'  # Linux alt
+                            ]
+                            
+                            vietnamese_font = 'Helvetica'  # Default fallback
+                            for font_path in font_paths:
+                                try:
+                                    if os.path.exists(font_path):
+                                        pdfmetrics.registerFont(TTFont('VietnameseFont', font_path))
+                                        vietnamese_font = 'VietnameseFont'
+                                        break
+                                except:
+                                    continue
+                            
+                            def create_pdf():
+                                pdf_output = BytesIO()
+                                doc = SimpleDocTemplate(
+                                    pdf_output,
+                                    pagesize=landscape(A4),
+                                    topMargin=0.75*inch,
+                                    bottomMargin=0.75*inch,
+                                    leftMargin=0.5*inch,
+                                    rightMargin=0.5*inch
+                                )
+                                
+                                # Custom styles
+                                styles = getSampleStyleSheet()
+                                title_style = ParagraphStyle(
+                                    'VietTitle',
+                                    parent=styles['Title'],
+                                    fontName=vietnamese_font,
+                                    fontSize=18,
+                                    textColor=colors.HexColor('#1E40AF'),
+                                    alignment=1,
+                                    spaceAfter=20
+                                )
+                                
+                                normal_style = ParagraphStyle(
+                                    'VietNormal',
+                                    parent=styles['Normal'],
+                                    fontName=vietnamese_font,
+                                    fontSize=10,
+                                    textColor=colors.HexColor('#374151')
+                                )
+                                
+                                story = []
+                                
+                                # Title
+                                title = Paragraph("📋 BÁO CÁO ACTIVITY LOGS", title_style)
+                                subtitle = Paragraph(f"Tạo lúc: {pd.Timestamp.now().strftime('%d/%m/%Y %H:%M')}", normal_style)
+                                story.extend([title, Spacer(1, 20), subtitle, Spacer(1, 30)])
+                                
+                                # Thống kê
+                                stats_title = Paragraph("📊 THỐNG KÊ TỔNG QUAN", normal_style)
+                                story.append(stats_title)
+                                story.append(Spacer(1, 10))
+                                
+                                stats_data = [
+                                    ['Thông tin', 'Giá trị'],
+                                    ['Tổng số logs', f"{len(df_logs):,}"],
+                                    ['Số loại hoạt động', f"{df_logs['action'].nunique() if 'action' in df_logs.columns else 0}"],
+                                    ['Số người dùng', f"{df_logs['user_id'].nunique() if 'user_id' in df_logs.columns else 0}"],
+                                    ['Thời gian đầu', df_logs['formatted_date'].min() if 'formatted_date' in df_logs.columns else 'N/A'],
+                                    ['Thời gian cuối', df_logs['formatted_date'].max() if 'formatted_date' in df_logs.columns else 'N/A']
+                                ]
+                                
+                                stats_table = Table(stats_data, colWidths=[2.5*inch, 2*inch])
+                                stats_table.setStyle(TableStyle([
+                                    ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#1E40AF')),
+                                    ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                                    ('ALIGN', (0,0), (-1,0), 'CENTER'),
+                                    ('FONTNAME', (0,0), (-1,0), vietnamese_font),
+                                    ('FONTSIZE', (0,0), (-1,0), 11),
+                                    ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                                    
+                                    ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#F8FAFC')),
+                                    ('TEXTCOLOR', (0,1), (-1,-1), colors.HexColor('#374151')),
+                                    ('FONTNAME', (0,1), (-1,-1), vietnamese_font),
+                                    ('FONTSIZE', (0,1), (-1,-1), 9),
+                                    ('GRID', (0,0), (-1,-1), 1, colors.HexColor('#E5E7EB')),
+                                    ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor('#F1F5F9')]),
+                                    ('TOPPADDING', (0,1), (-1,-1), 8),
+                                    ('BOTTOMPADDING', (0,1), (-1,-1), 8),
+                                ]))
+                                
+                                story.append(stats_table)
+                                story.append(Spacer(1, 30))
+                                
+                                # Bảng dữ liệu chính
+                                data_title = Paragraph("📋 CHI TIẾT LOGS (100 bản ghi gần nhất)", normal_style)
+                                story.append(data_title)
+                                story.append(Spacer(1, 15))
+                                
+                                # Chọn columns để hiển thị
+                                display_cols = ['id', 'action', 'user_id', 'formatted_date']
+                                available_cols = [col for col in display_cols if col in df_logs.columns]
+                                
+                                if 'details' in df_logs.columns and len(available_cols) < 5:
+                                    available_cols.append('details')
+                                
+                                df_display = df_logs[available_cols].head(50)
+                                
+                                # Tạo headers
+                                headers = []
+                                col_mappings = {
+                                    'id': 'ID',
+                                    'action': 'Hoạt động', 
+                                    'user_id': 'User ID',
+                                    'details': 'Chi tiết',
+                                    'formatted_date': 'Thời gian',
+                                    'ip_address': 'IP'
+                                }
+                                
+                                for col in available_cols:
+                                    headers.append(col_mappings.get(col, col.title()))
+                                
+                                table_data = [headers]
+                                
+                                # Thêm dữ liệu
+                                for _, row in df_display.iterrows():
+                                    row_data = []
+                                    for col in available_cols:
+                                        cell_value = str(row[col]) if pd.notna(row[col]) else ''
+                                        if len(cell_value) > 40:
+                                            cell_value = cell_value[:37] + "..."
+                                        row_data.append(cell_value)
+                                    table_data.append(row_data)
+                                
+                                # Column widths
+                                available_width = 10 * inch
+                                col_count = len(available_cols)
+                                base_width = available_width / col_count
+                                
+                                col_widths = []
+                                for i, col in enumerate(available_cols):
+                                    if col == 'id':
+                                        col_widths.append(base_width * 0.6)
+                                    elif col == 'details':
+                                        col_widths.append(base_width * 1.5)
+                                    elif col == 'formatted_date':
+                                        col_widths.append(base_width * 1.2)
+                                    else:
+                                        col_widths.append(base_width)
+                                
+                                total_width = sum(col_widths)
+                                col_widths = [w * available_width / total_width for w in col_widths]
+                                
+                                main_table = Table(table_data, colWidths=col_widths, repeatRows=1)
+                                main_table.setStyle(TableStyle([
+                                    # Header
+                                    ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#1E40AF')),
+                                    ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                                    ('ALIGN', (0,0), (-1,0), 'CENTER'),
+                                    ('FONTNAME', (0,0), (-1,0), vietnamese_font),
+                                    ('FONTSIZE', (0,0), (-1,0), 9),
+                                    ('BOTTOMPADDING', (0,0), (-1,0), 10),
+                                    
+                                    # Data
+                                    ('BACKGROUND', (0,1), (-1,-1), colors.white),
+                                    ('TEXTCOLOR', (0,1), (-1,-1), colors.HexColor('#374151')),
+                                    ('FONTNAME', (0,1), (-1,-1), vietnamese_font),
+                                    ('FONTSIZE', (0,1), (-1,-1), 8),
+                                    ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#E5E7EB')),
+                                    ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor('#F9FAFB')]),
+                                    ('TOPPADDING', (0,1), (-1,-1), 6),
+                                    ('BOTTOMPADDING', (0,1), (-1,-1), 6),
+                                    ('LEFTPADDING', (0,0), (-1,-1), 6),
+                                    ('RIGHTPADDING', (0,0), (-1,-1), 6),
+                                    ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+                                ]))
+                                
+                                story.append(main_table)
+                                
+                                # Footer
+                                story.append(Spacer(1, 20))
+                                footer = Paragraph(
+                                    f"Báo cáo tự động - AI Healthcare Admin - {pd.Timestamp.now().strftime('%d/%m/%Y %H:%M')}",
+                                    ParagraphStyle(
+                                        'Footer',
+                                        parent=styles['Normal'],
+                                        fontName=vietnamese_font,
+                                        fontSize=8,
+                                        textColor=colors.HexColor('#9CA3AF'),
+                                        alignment=1
+                                    )
+                                )
+                                story.append(footer)
+                                
+                                doc.build(story)
+                                return pdf_output.getvalue()
+                            
+                            pdf_data = create_pdf()
+                            st.download_button(
+                                "📄 Tải file PDF",
+                                pdf_data,
+                                f"activity_logs_{pd.Timestamp.now().strftime('%Y%m%d_%H%M')}.pdf",
+                                "application/pdf",
+                                help="PDF chuyên nghiệp với font tiếng Việt và layout đẹp",
+                                use_container_width=True
+                            )
+                            show_notification("File PDF đã sẵn sàng tải xuống!", "success", auto_close=True)
+                            
+                        except ImportError:
+                            st.error("⚠️ Thiếu thư viện reportlab. Vui lòng cài đặt: `pip install reportlab`")
+                        except Exception as e:
+                            st.error(f"❌ Lỗi tạo PDF: {str(e)}")
+
                 except Exception as e:
-                    show_notification(f"Lỗi tạo PDF: {e}", "error")
+                    show_notification(f"Lỗi khi xuất file: {str(e)}", "error")
+
+            # Thông báo hướng dẫn - Cập nhật cho dropdown
+            st.markdown("""
+            <div style="background: #EFF6FF; border-left: 4px solid #3B82F6; padding: 1rem; margin: 1rem 0; border-radius: 0 8px 8px 0;">
+                <h5 style="color: #1E40AF; margin: 0 0 0.5rem 0;">💡 Hướng dẫn xuất file:</h5>
+                <ul style="color: #374151; margin: 0; padding-left: 1.5rem;">
+                    <li><strong>CSV:</strong> Có BOM UTF-8 - Excel sẽ tự động hiển thị tiếng Việt đúng</li>
+                    <li><strong>Excel:</strong> Định dạng header đẹp, auto-resize, có sheet thống kê riêng</li>
+                    <li><strong>JSON:</strong> Giữ nguyên ký tự tiếng Việt, format đẹp với indent</li>
+                    <li><strong>PDF:</strong> Tự động detect font hệ thống, layout ngang, có thống kê</li>
+                </ul>
+                <div style="margin-top: 0.75rem; padding: 0.5rem; background: #DBEAFE; border-radius: 4px;">
+                    <strong>🔥 Mới:</strong> Chọn định dạng từ dropdown và nhấn "Tải xuống" - Giao diện gọn gàng hơn!
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
             # Additional Export Options
             st.markdown("---")
@@ -1124,12 +1407,18 @@ with tab3:
                                 (pd.to_datetime(df_logs['created_at']).dt.date <= date_to)
                             ]
                         
-                        custom_csv = filtered_data.to_csv(index=False).encode("utf-8")
+                        # Tạo CSV với UTF-8 BOM
+                        csv_buffer = io.StringIO()
+                        filtered_data.to_csv(csv_buffer, index=False)
+                        csv_content = csv_buffer.getvalue()
+                        custom_csv = ('\ufeff' + csv_content).encode('utf-8')
+                        
                         st.download_button(
                             "⬇️ Tải CSV tùy chỉnh",
                             custom_csv,
                             f"custom_logs_{pd.Timestamp.now().strftime('%Y%m%d_%H%M')}.csv",
-                            "text/csv"
+                            "text/csv",
+                            help="CSV tùy chỉnh với UTF-8 BOM"
                         )
                         show_notification("Xuất dữ liệu tùy chỉnh thành công!", "success", auto_close=True)
                     else:
@@ -1141,7 +1430,6 @@ with tab3:
         show_notification(f"Lỗi khi tải logs: {e}", "error")
     
     st.markdown('</div>', unsafe_allow_html=True)
-
 # ==========================
 # 🔹 Footer với thông tin hệ thống
 # ==========================
