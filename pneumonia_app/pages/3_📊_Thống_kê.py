@@ -2,7 +2,14 @@ import streamlit as st, pandas as pd
 from utils.db_utils import get_connection
 import plotly.graph_objects as go
 import plotly.express as px
-
+import streamlit as st
+import pandas as pd
+from utils.db_utils import get_connection
+import plotly.graph_objects as go
+import plotly.express as px
+from io import StringIO, BytesIO 
+from io import StringIO
+import datetime
 st.set_page_config(page_title="Thống kê", layout="wide")
 
 # Custom CSS cho giao diện đẹp
@@ -265,8 +272,10 @@ def show_detailed_report(df):
                 color=severity_counts.values,
                 color_continuous_scale='RdYlBu_r'
             )
-            fig_severity.update_xaxis(title="Mức độ")
-            fig_severity.update_yaxis(title="Số lượng")
+            fig_severity.update_layout(
+                xaxis_title="Mức độ",
+                yaxis_title="Số lượng"
+            )
             st.plotly_chart(fig_severity, use_container_width=True)
         else:
             st.info("Không có dữ liệu mức độ nghiêm trọng")
@@ -359,8 +368,10 @@ def show_detailed_report(df):
             title="Số lượng chẩn đoán theo giờ",
             markers=True
         )
-        fig_hourly.update_xaxis(title="Giờ trong ngày")
-        fig_hourly.update_yaxis(title="Số lượng chẩn đoán")
+        fig_hourly.update_layout(
+            xaxis_title="Giờ trong ngày",
+            yaxis_title="Số lượng chẩn đoán"
+        )
         st.plotly_chart(fig_hourly, use_container_width=True)
     
     with col_hour2:
@@ -409,8 +420,10 @@ def show_detailed_report(df):
             title="Phân bố độ tin cậy",
             color_discrete_sequence=['#2196f3']
         )
-        fig_hist.update_xaxis(title="Độ tin cậy (%)")
-        fig_hist.update_yaxis(title="Số lượng")
+        fig_hist.update_layout(
+            xaxis_title="Độ tin cậy (%)",
+            yaxis_title="Số lượng"
+        )
         st.plotly_chart(fig_hist, use_container_width=True)
     
     with col_acc3:
@@ -647,7 +660,7 @@ try:
         df_monthly = df_monthly.sort_values("month")
         df_monthly["month"] = df_monthly["month"].dt.strftime("%Y-%m")
 
-        # Biểu đồ kết hợp
+        # Biểu đồ kết hợp - Sửa lỗi update_xaxis
         fig = go.Figure()
 
         # Cột: số lượng chẩn đoán bình thường
@@ -679,7 +692,7 @@ try:
             marker=dict(size=8)
         ))
 
-        # Cấu hình layout
+        # Cấu hình layout - Sử dụng update_layout thay vì update_xaxis/update_yaxis
         fig.update_layout(
             title="",
             xaxis=dict(title="Tháng", tickangle=-45),
@@ -728,22 +741,125 @@ try:
         )
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Phần xuất dữ liệu
+                # 2. THAY THẾ TOÀN BỘ PHẦN XUẤT DỮ LIỆU
+        # PHẦN XUẤT DỮ LIỆU - SỬA LẠI THEO CẤU TRÚC DATABASE
+        # THÊM IMPORT Ở ĐẦU FILE
+    
+
+        # PHẦN XUẤT DỮ LIỆU - SỬA LẠI THEO CẤU TRÚC DATABASE
         st.markdown('<div class="export-section">', unsafe_allow_html=True)
         st.markdown('<h4 class="section-title">💾 Xuất dữ liệu</h4>', unsafe_allow_html=True)
-        
         col_export1, col_export2, col_export3 = st.columns([1, 1, 1])
-        
+
         with col_export1:
-            csv_data = df.to_csv(index=False).encode('utf-8')
+            # Chuẩn bị dữ liệu xuất
+            export_df = df.copy()
+            
+            # Mapping tên cột theo DataFrame thực tế
+            column_mapping = {
+                # Từ DataFrame hiện tại
+                'Ket_qua': 'Ket_qua_chan_doan',
+                'Muc_do': 'Muc_do_nghiem_trong', 
+                'Do_tin_cay': 'Do_tin_cay_phan_tram',
+                'Thuat_toan': 'Thuat_toan_su_dung',
+                'Thoi_gian': 'Thoi_gian_chan_doan',
+                
+                # Giữ nguyên các cột đã đúng tên
+                'result': 'Ket_qua_chan_doan',
+                'severity': 'Muc_do_nghiem_trong',
+                'confidence': 'Do_tin_cay_phan_tram', 
+                'algorithm': 'Thuat_toan_su_dung',
+                'created_at': 'Thoi_gian_chan_doan'
+            }
+            
+            # Xử lý định dạng dữ liệu
+            try:
+                # Xử lý cột thời gian (tên thực tế là Thoi_gian)
+                if 'created_at' in export_df.columns:
+                    if pd.api.types.is_datetime64_any_dtype(export_df['created_at']):
+                        export_df['Thoi_gian'] = export_df['created_at'].dt.strftime('%d/%m/%Y %H:%M:%S')
+                    else:
+                        try:
+                            export_df['created_at'] = pd.to_datetime(export_df['created_at']).dt.strftime('%d/%m/%Y %H:%M:%S')
+                        except:
+                            pass  # Giữ nguyên nếu không convert được
+                
+                # Xử lý cột confidence (tên có thể là Do_tin_cay hoặc confidence)
+                for col_name in ['Do_tin_cay', 'confidence']:
+                    if col_name in export_df.columns:
+                        try:
+                            # Nếu đã là phần trăm (>1) thì giữ nguyên, nếu là decimal thì nhân 100
+                            values = pd.to_numeric(export_df[col_name], errors='coerce')
+                            # Kiểm tra xem giá trị có phải đã là phần trăm chưa
+                            if values.max() <= 1.0:
+                                export_df[col_name] = (values * 100).round(1)
+                            else:
+                                export_df[col_name] = values.round(1)
+                        except:
+                            pass
+                        break  # Chỉ xử lý cột đầu tiên tìm thấy
+                
+                # Áp dụng mapping tên cột
+                existing_mapping = {k: v for k, v in column_mapping.items() if k in export_df.columns}
+                export_df = export_df.rename(columns=existing_mapping)
+                
+            except Exception as e:
+                st.error(f"Lỗi xử lý dữ liệu: {e}")
+            
+            # Sắp xếp cột theo thứ tự ưu tiên
+            priority_columns = [
+                'created_at',
+                'Ten_nguoi_dung', 
+                'Ket_qua_chan_doan',
+                'Muc_do_nghiem_trong',
+                'Do_tin_cay_phan_tram',
+                'Thuat_toan_su_dung',
+                'Khuyen_nghi'
+            ]
+            
+            final_columns = []
+            # Thêm cột theo thứ tự ưu tiên
+            for col in priority_columns:
+                if col in export_df.columns:
+                    final_columns.append(col)
+            
+            # Thêm các cột còn lại
+            for col in export_df.columns:
+                if col not in final_columns:
+                    final_columns.append(col)
+            
+            export_df = export_df[final_columns]
+            
+            # Tạo CSV
+            csv_buffer = StringIO()
+            export_df.to_csv(csv_buffer, index=False, encoding='utf-8', sep=';', lineterminator='\n')
+            csv_string = csv_buffer.getvalue()
+            
+            # Thêm UTF-8 BOM để Excel đọc được tiếng Việt
+            csv_data = '\ufeff' + csv_string
+            csv_bytes = csv_data.encode('utf-8')
+            
+            # Tạo tên file
+            timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+            try:
+                username = st.session_state.user['username']
+            except:
+                username = 'user'
+            
+            filename = f"lich_su_chan_doan_{username}_{timestamp}.csv"
+            
             st.download_button(
-                label="📄 Tải CSV",
-                data=csv_data,
-                file_name=f"thong_ke_{st.session_state.user['username']}.csv",
-                mime="text/csv",
-                use_container_width=True
+                label="📄 Tải CSV (Excel)",
+                data=csv_bytes,
+                file_name=filename,
+                mime="text/csv; charset=utf-8",
+                use_container_width=True,
+                help="File CSV tương thích với Excel, sử dụng dấu ; làm phân cách"
             )
-        
+            
+            # Hiển thị thông tin
+            st.info(f"📊 Tổng số bản ghi: {len(export_df)}")
+
         with col_export2:
             if st.button("📊 Xem báo cáo chi tiết", use_container_width=True):
                 # Tạo session state để hiển thị báo cáo chi tiết
