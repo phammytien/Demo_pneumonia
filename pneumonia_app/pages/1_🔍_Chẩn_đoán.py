@@ -7,6 +7,8 @@ from utils.db_utils import get_connection, add_log
 from utils.speak import speak
 from utils.gist import show_diagnosis_conclusion
 from utils.gradcam_yolo import generate_gradcam_yolo  # Import Grad-CAM cho YOLO11
+from utils.ml_models import predict_yolo, predict_rf, yolo_model
+
 
 st.set_page_config(page_title="Chẩn đoán", layout="wide")
 
