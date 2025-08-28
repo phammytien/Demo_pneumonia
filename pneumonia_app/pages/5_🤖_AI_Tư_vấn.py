@@ -262,18 +262,34 @@ if "user" not in st.session_state or not st.session_state.logged_in:
 # ==========================
 # 🔹 Kết nối MySQL
 # ==========================
+# def get_connection():
+#     try:
+#         conn = mysql.connector.connect(
+#             host="127.0.0.1",
+#             port=3307,
+#             database="pneumonia_app_1",
+#             user="root",
+#             password="123456"
+#         )
+#         return conn if conn.is_connected() else None
+#     except Error as e:
+#         st.error(f"❌ Lỗi kết nối cơ sở dữ liệu: {e}")
+#         return None
+
+# Hàm tạo kết nối
 def get_connection():
     try:
         conn = mysql.connector.connect(
-            host="127.0.0.1",
-            port=3307,
-            database="pneumonia_app_1",
-            user="root",
-            password="123456"
+            host=st.secrets["mysql"]["host"],
+            port=int(st.secrets["mysql"]["port"]),
+            database=st.secrets["mysql"]["database"],
+            user=st.secrets["mysql"]["user"],
+            password=st.secrets["mysql"]["password"]
         )
-        return conn if conn.is_connected() else None
+        if conn.is_connected():
+            return conn
     except Error as e:
-        st.error(f"❌ Lỗi kết nối cơ sở dữ liệu: {e}")
+        st.error(f"❌ Lỗi khi kết nối MySQL Railway: {e}")
         return None
 
 def close_connection(conn):
