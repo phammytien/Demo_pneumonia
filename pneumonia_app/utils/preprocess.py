@@ -1,7 +1,10 @@
 from PIL import Image
 import os
 
-def save_uploaded_file(uploaded_file, folder="uploads"):
+def save_uploaded_file(uploaded_file, folder="/tmp/uploads"):
+    """
+    Lưu file upload vào thư mục tạm (/tmp/) để chạy trên Streamlit Cloud.
+    """
     if not os.path.exists(folder):
         os.makedirs(folder)
     file_path = os.path.join(folder, uploaded_file.name)
