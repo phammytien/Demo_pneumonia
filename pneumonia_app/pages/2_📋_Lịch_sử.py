@@ -2,6 +2,14 @@ import streamlit as st
 import pandas as pd
 from utils.db_utils import get_connection
 import math
+import base64
+from io import BytesIO
+from PIL import Image
+
+def decode_image(base64_str):
+    """Giải mã ảnh từ base64 thành đối tượng PIL.Image"""
+    image_data = base64.b64decode(base64_str)
+    return Image.open(BytesIO(image_data))
 
 st.set_page_config(page_title="Lịch sử chẩn đoán", layout="wide")
 
@@ -644,12 +652,14 @@ try:
                             """, unsafe_allow_html=True)
                             
                             # Hiển thị ảnh với styling đẹp
-                            if row["filename"]:
+                            if "image_base64" in row and row["image_base64"]:
                                 st.markdown('<div class="image-container">', unsafe_allow_html=True)
-                                
-                                st.image(f"/tmp/uploads/{row['filename']}", caption=row["filename"], width=350)
+                            
+                            img = decode_image(row["image_base64"])
+                            st.image(img, caption=row["filename"], width=350)
+                            
+                            st.markdown('</div>', unsafe_allow_html=True)
 
-                                st.markdown('</div>', unsafe_allow_html=True)
                     
                     with col3:
                         # Nút xóa đơn lẻ
