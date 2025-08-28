@@ -6,10 +6,7 @@ import base64
 from io import BytesIO
 from PIL import Image
 
-def decode_image(base64_str):
-    """Giải mã ảnh từ base64 thành đối tượng PIL.Image"""
-    image_data = base64.b64decode(base64_str)
-    return Image.open(BytesIO(image_data))
+
 
 st.set_page_config(page_title="Lịch sử chẩn đoán", layout="wide")
 
@@ -653,7 +650,7 @@ try:
                             
                             import os
 
-                            UPLOAD_DIR = "static/uploads"  # chỗ bạn lưu ảnh khi upload
+                            UPLOAD_DIR = "uploads"  # chỗ bạn lưu ảnh khi upload
 
                             # Hiển thị ảnh từ filename
                             if row["filename"]:
