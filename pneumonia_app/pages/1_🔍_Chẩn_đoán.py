@@ -230,8 +230,8 @@ successful_diagnoses = []
 
 if uploaded_files:
     
-        UPLOAD_DIR = "uploads"
-        os.makedirs(UPLOAD_DIR, exist_ok=True)
+    UPLOAD_DIR = "uploads"
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
     for uploaded_file in uploaded_files:
