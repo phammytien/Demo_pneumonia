@@ -1,16 +1,23 @@
+import os
 import joblib
 from ultralytics import YOLO
 import cv2
 import numpy as np
 from tensorflow.keras.applications import MobileNetV2
 
+# ================== PATH CẤU HÌNH ==================
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))  # thư mục pneumonia_app
+
+YOLO_PATH = os.path.join(BASE_DIR, "models", "best.pt")
+RF_BUNDLE_PATH = os.path.join(BASE_DIR, "models", "xray_rf_mobilenet.joblib")
+
 # ================== LOAD MODEL ==================
 
 # Load YOLO model (dùng alias model cho gọn)
-yolo_model = YOLO("models/best.pt")
+yolo_model = YOLO(YOLO_PATH)
 
 # Load RandomForest + MobileNet bundle
-rf_bundle = joblib.load("models/xray_rf_mobilenet.joblib")
+rf_bundle = joblib.load(RF_BUNDLE_PATH)
 rf = rf_bundle["rf"]
 class_names = rf_bundle["class_names"]
 img_size = rf_bundle["img_size"]
@@ -26,7 +33,7 @@ base_model = MobileNetV2(
 # ================== HÀM DỰ ĐOÁN ==================
 
 def predict_yolo(image_path: str):
-    """Dự đoán bằng YOLO11"""
+    """Dự đoán bằng YOLOv11"""
     results = yolo_model.predict(source=image_path, imgsz=224, conf=0.25)
     r = results[0]
 
