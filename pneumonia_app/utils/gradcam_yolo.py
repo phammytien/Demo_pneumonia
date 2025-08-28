@@ -1,7 +1,7 @@
 import torch
 import cv2
 import numpy as np
-from utils.ml_models import yolo_model   # ✅ import sẵn YOLO11 model từ utils/ml_models
+from utils.ml_models import yolo_model   # ✅ import YOLO11 model từ utils/ml_models
 
 # ---------------------------
 # HÀM TẠO GRAD-CAM TỪ YOLO
@@ -68,7 +68,7 @@ def generate_gradcam_yolo(model, image_path, input_size=640, target_layer="model
 
 
 # ---------------------------
-# DEBUG MÔ HÌNH
+# DEBUG CẤU TRÚC MÔ HÌNH
 # ---------------------------
 def debug_model_structure(model):
     print("===== CẤU TRÚC YOLO MODEL =====")
@@ -77,10 +77,10 @@ def debug_model_structure(model):
 
 
 # ---------------------------
-# TEST TRỰC TIẾP (nếu chạy file riêng)
+# TEST TRỰC TIẾP
 # ---------------------------
 if __name__ == "__main__":
-    test_image = "uploads/test.jpg"   # đổi đường dẫn ảnh khi test
+    test_image = "uploads/test.jpg"   # đổi ảnh để test
     debug_model_structure(yolo_model)
 
     overlay, heatmap = generate_gradcam_yolo(yolo_model, test_image)
