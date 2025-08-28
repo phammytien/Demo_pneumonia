@@ -1,13 +1,14 @@
 import streamlit as st, os
 
+# Import model + Grad-CAM
+from utils.ml_models import predict_yolo, predict_rf, yolo_model
+from utils.gradcam_yolo import generate_gradcam_yolo  
 
-
+# Import utils khác
 from utils.preprocess import save_uploaded_file, is_xray
 from utils.db_utils import get_connection, add_log
 from utils.speak import speak
 from utils.gist import show_diagnosis_conclusion
-from utils.gradcam_yolo import generate_gradcam_yolo  # Import Grad-CAM cho YOLO11
-from utils.ml_models import predict_yolo, predict_rf, yolo_model
 
 
 st.set_page_config(page_title="Chẩn đoán", layout="wide")
@@ -357,7 +358,8 @@ if uploaded_files:
                         
                         try:
                             with st.spinner('🔥 Đang tạo bản đồ nhiệt Grad-CAM...'):
-                                overlay, heatmap = generate_gradcam_yolo(model, file_path, input_size=640)
+                                overlay, heatmap = generate_gradcam_yolo(yolo_model, file_path, input_size=640)
+
 
                             col_original, col_overlay, col_heatmap = st.columns([1, 1, 1])
 
