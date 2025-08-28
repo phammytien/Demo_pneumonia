@@ -1,7 +1,7 @@
 import streamlit as st, os
 
 
-from utils.ml_models import predict_yolo, predict_rf, model  # đảm bảo bạn load model YOLO11 ở đây
+
 from utils.preprocess import save_uploaded_file, is_xray
 from utils.db_utils import get_connection, add_log
 from utils.speak import speak
