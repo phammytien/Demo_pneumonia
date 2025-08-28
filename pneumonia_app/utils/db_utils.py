@@ -1,29 +1,28 @@
 import mysql.connector
 from mysql.connector import Error
 
-
 # Hàm tạo kết nối
 def get_connection():
     try:
         conn = mysql.connector.connect(
-            host="127.0.0.1",       # host MySQL
-            port=3307,              # cổng MySQL
-            database="pneumonia_app_1",  # tên database
-            user="root",            # user MySQL
-            password="123456"       # password MySQL
+            host="cabOOSE.proxy.rlwy.net",   # host Railway
+            port=47488,                      # port Railway
+            database="railway",              # tên database
+            user="root",                     # user
+            password="htlpYrDeHTlriVTkLHdMQPlbVdmQpqBQ"  # password Railway
         )
         if conn.is_connected():
-            print("✅ Đã kết nối MySQL thành công!")
+            print("✅ Đã kết nối MySQL Railway thành công!")
             return conn
     except Error as e:
-        print("❌ Lỗi khi kết nối MySQL:", e)
+        print("❌ Lỗi khi kết nối MySQL Railway:", e)
         return None
 
 # Hàm đóng kết nối
 def close_connection(conn):
     if conn and conn.is_connected():
         conn.close()
-        print("🔌 Đã đóng kết nối MySQL.")
+        print("🔌 Đã đóng kết nối MySQL Railway.")
 
 # ===================== LOG HOẠT ĐỘNG =====================
 def add_log(user_id, action, details=""):
