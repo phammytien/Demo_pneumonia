@@ -651,14 +651,18 @@ try:
                             </div>
                             """, unsafe_allow_html=True)
                             
-                            # Hiển thị ảnh với styling đẹp
-                            if "image_base64" in row and row["image_base64"]:
-                                st.markdown('<div class="image-container">', unsafe_allow_html=True)
-                            
-                            img = decode_image(row["image_base64"])
-                            st.image(img, caption=row["filename"], width=350)
-                            
-                            st.markdown('</div>', unsafe_allow_html=True)
+                            # Hiển thị ảnh với styling đẹp (chỉ khi DB có cột image_base64)
+                            if "image_base64" in row and row["image_base64"] is not None:
+                                try:
+                                    img = decode_image(row["image_base64"])
+                                    st.markdown('<div class="image-container">', unsafe_allow_html=True)
+                                    st.image(img, caption=row["filename"], width=350)
+                                    st.markdown('</div>', unsafe_allow_html=True)
+                                except Exception as e:
+                                    st.warning(f"⚠️ Không thể hiển thị ảnh: {e}")
+                            else:
+                                st.info("📁 Không có ảnh được lưu kèm")
+
 
                     
                     with col3:
