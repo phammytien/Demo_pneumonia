@@ -1,6 +1,35 @@
+# Web framework
 streamlit
-torch
-ultralytics
-pillow
+werkzeug
+
+# Data processing
+pandas
+numpy
+joblib
+
+# Visualization
+matplotlib
+plotly
+
+# Image processing
 opencv-python
+pillow
+scikit-image
+
+# Deep Learning & AI
+torch
+torchvision
+torchaudio
+ultralytics
+tensorflow
+scikit-learn
+
+# Google & AI API
+google-generativeai
+gTTS
+
+# Database
 mysql-connector-python
+
+# Audio
+pydub
