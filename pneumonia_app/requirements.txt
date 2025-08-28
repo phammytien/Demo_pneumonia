@@ -33,3 +33,7 @@ mysql-connector-python
 
 # Audio
 pydub
+
+streamlit
+mysql-connector-python
+
