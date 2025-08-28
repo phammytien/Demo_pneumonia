@@ -1,15 +1,16 @@
 import mysql.connector
+import streamlit as st
 from mysql.connector import Error
 
 # Hàm tạo kết nối
 def get_connection():
     try:
         conn = mysql.connector.connect(
-            host="cabOOSE.proxy.rlwy.net",   # host Railway
-            port=47488,                      # port Railway
-            database="railway",              # tên database
-            user="root",                     # user
-            password="htlpYrDeHTlriVTkLHdMQPlbVdmQpqBQ"  # password Railway
+            host=st.secrets["mysql"]["host"],
+            port=st.secrets["mysql"]["port"],
+            database=st.secrets["mysql"]["database"],
+            user=st.secrets["mysql"]["user"],
+            password=st.secrets["mysql"]["password"]
         )
         if conn.is_connected():
             print("✅ Đã kết nối MySQL Railway thành công!")
