@@ -646,7 +646,9 @@ try:
                             # Hiển thị ảnh với styling đẹp
                             if row["filename"]:
                                 st.markdown('<div class="image-container">', unsafe_allow_html=True)
-                                st.image(f"uploads/{row['filename']}", caption=row["filename"], width=350)
+                                
+                                st.image(f"/tmp/uploads/{row['filename']}", caption=row["filename"], width=350)
+
                                 st.markdown('</div>', unsafe_allow_html=True)
                     
                     with col3:
