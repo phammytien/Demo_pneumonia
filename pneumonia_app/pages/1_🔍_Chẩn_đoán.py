@@ -231,15 +231,15 @@ diagnosis_results = []
 successful_diagnoses = []
 
 if uploaded_files:
-    
     UPLOAD_DIR = "uploads"
     os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-
     for uploaded_file in uploaded_files:
-        file_path = os.path.join(uploads_dir, uploaded_file.name)
+        file_path = os.path.join(UPLOAD_DIR, uploaded_file.name)
+
         with open(file_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
+
 
         # Lớp 2: Ảnh bên trái, Kết quả bên phải
         col_left, col_right = st.columns([1, 1])
