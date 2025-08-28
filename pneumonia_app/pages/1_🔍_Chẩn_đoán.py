@@ -230,8 +230,9 @@ successful_diagnoses = []
 
 if uploaded_files:
     
-    uploads_dir = "/tmp/uploads"
-    os.makedirs(uploads_dir, exist_ok=True)
+        UPLOAD_DIR = "uploads"
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 
     for uploaded_file in uploaded_files:
         file_path = os.path.join(uploads_dir, uploaded_file.name)
